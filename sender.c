@@ -6,14 +6,15 @@
 #include <unistd.h> 
 #include <stdlib.h>
 #include <arpa/inet.h>
-#define FILESIZE 5000000 // around 4.8MB
+//#define FILESIZE 5000000// around 4.8MB
+#define SIZE 1024
 
 //function to send the file, maybe because of the packet lose I should send in smaller sizes
 void send_file(FILE *fp, int sockfd){
   int sentSize=0;
-  char * data = (char *) malloc(sizeof(char)*FILESIZE);
-  while(fgets(data, FILESIZE, fp) != NULL) {
-    if (send(sockfd, data,SIZE, 0) == -1) {
+  char * data = (char *) malloc(SIZE);
+  while(fgets(data, SIZE, fp) != NULL) {
+    if (send(sockfd, data,strlen(data), 0) == -1) {
       perror("Could not send the file");
       exit(1);
     }
@@ -21,10 +22,10 @@ void send_file(FILE *fp, int sockfd){
 	sentSize=sentSize+strlen(data);
 	// frees the memory
     free(data);
-	data = (char *) malloc(sizeof(char)*FILESIZE);
+	data = (char *) malloc(sizeof(char)*SIZE);
   }
   free(data);
-  printf("%d bytes were sent",sentSize);
+  printf("%d bytes were sent\n",sentSize);
 }
 
 int main(int argc, char **argv) {
@@ -64,25 +65,25 @@ printf("Current: %s\n", buf);
   // creates a connection to the server if err ==-1 connection couldn't be made
     int err = connect(sock, (struct sockaddr*)&serv, sizeof(serv));
       if(err == -1) {
-    perror("Error could not connect");
+    perror("Error could not connect\n");
     exit(1);
   }
-  printf("Connection established");
+  printf("Connection established\n");
   // just my filename
   char * filename = "1mb.txt";
   // opens the file
       FILE * fp;
     fp = fopen(filename, "r");
   if (fp == NULL) {
-    perror("[-]Error in reading file.");
+    perror("Could not open the file");
     exit(1);
   }
   // send the file 5 times
-for(int i=0;i<5;i++){
+for(int i=1;i<=5;i++){
     send_file(fp, sock);
 	//resets the pointer to the start of the file
     fseek(fp,0,SEEK_SET);
-  printf("File number %d was sent successfully in Cubic",%i);
+  printf("File number %d was sent successfully in Cubic\n",i);
 }
 
 
@@ -102,14 +103,13 @@ return -1;
 }
 // prints the socket tcp implementation 
 printf("New: %s\n", buf);
-for(int i=0;i<5;i++){
-        send_file(fp, sock);
-	//resets the pointer to the start of the file
-    fseek(fp,0,SEEK_SET);
-  printf("File number %d was sent successfully in reno",%i);
+for(int i=1;i<=5;i++){
+        fseek(fp,0,SEEK_SET);
+	send_file(fp, sock);
+  printf("File number %d was sent successfully in reno\n",i);
 }
 // self explainatory
-printf("closing connection and file");
+printf("closing connection and file\n");
 fclose(fp);
 close(sock); 
 return 0; 
