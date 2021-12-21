@@ -6,88 +6,111 @@
 #include <unistd.h> 
 #include <stdlib.h>
 #include <arpa/inet.h>
-#define SIZE 1024
+#define FILESIZE 5000000 // around 4.8MB
+
+//function to send the file, maybe because of the packet lose I should send in smaller sizes
 void send_file(FILE *fp, int sockfd){
-  int n=0;
-  char data[SIZE] = {0};
-  while(fgets(data, SIZE, fp) != NULL) {
+  int sentSize=0;
+  char * data = (char *) malloc(sizeof(char)*FILESIZE);
+  while(fgets(data, FILESIZE, fp) != NULL) {
     if (send(sockfd, data,SIZE, 0) == -1) {
-      perror("[-]Error in sending file.");
+      perror("Could not send the file");
       exit(1);
     }
-	n=n+strlen(data);
-    bzero(data, SIZE);
+	// calculates the size 
+	sentSize=sentSize+strlen(data);
+	// frees the memory
+    free(data);
+	data = (char *) malloc(sizeof(char)*FILESIZE);
   }
-  printf("%d bytes were sent",n);
+  free(data);
+  printf("%d bytes were sent",sentSize);
 }
 
 int main(int argc, char **argv) {
+
+// buffer to configure whether it transmits in reno or cubic
 char buf[256];
+//a 32 bit int which we don't have to worry about giving the machine.
 socklen_t len;
+// sock creation kind inet meaning ipv4, sock_stream=TCP
 int sock = socket(AF_INET, SOCK_STREAM, 0);
+//if sock is -1 socket creation was not successfull
  	if (sock == -1) {
  		perror("socket");
  return -1;
  } 
-
+//len is an int in the size of buff
 len = sizeof(buf); 
+// in our case it retrievies the TCP implementation, supposed to be cubic
 if (getsockopt(sock, IPPROTO_TCP, TCP_CONGESTION, buf, &len) != 0) { 
 perror("getsockopt");
 return -1;
 } 
-
+// prints the TCP kind
 printf("Current: %s\n", buf); 
-// my code
+// the IP i will use, send the information too
   char *ip = "127.0.0.1";
+  // port i will use to send the information
   int port = 10000;
-  struct sockaddr_in server_addr;
-  server_addr.sin_family = AF_INET;
-  server_addr.sin_port = port;
-  server_addr.sin_addr.s_addr = inet_addr(ip);
-  
-    int err = connect(sock, (struct sockaddr*)&server_addr, sizeof(server_addr));
+  // sockaddr of the server information.
+  struct sockaddr_in serv;
+  // AF_INET is ipv4 protocol
+  serv.sin_family = AF_INET;
+  // port equals the port we will use
+  serv.sin_port = port;
+  // convert ip to binary text 
+  serv.sin_addr.s_addr = inet_addr(ip);
+  // creates a connection to the server if err ==-1 connection couldn't be made
+    int err = connect(sock, (struct sockaddr*)&serv, sizeof(serv));
       if(err == -1) {
-    perror("[-]Error in socket");
+    perror("Error could not connect");
     exit(1);
   }
-  printf("[+]Connected to Server.\n");
+  printf("Connection established");
+  // just my filename
   char * filename = "1mb.txt";
-for(int i=0;i<5;i++){
-    FILE * fp;
+  // opens the file
+      FILE * fp;
     fp = fopen(filename, "r");
   if (fp == NULL) {
     perror("[-]Error in reading file.");
     exit(1);
   }
+  // send the file 5 times
+for(int i=0;i<5;i++){
     send_file(fp, sock);
-    fclose(fp);
-  printf("[+]File data sent successfully.\n");
+	//resets the pointer to the start of the file
+    fseek(fp,0,SEEK_SET);
+  printf("File number %d was sent successfully in Cubic",%i);
 }
 
+
+// puts reno in the buff
 strcpy(buf, "reno"); 
 len = strlen(buf);
+// change the socket to reno.
 if (setsockopt(sock, IPPROTO_TCP, TCP_CONGESTION, buf, len) != 0) {
 perror("setsockopt"); 
 return -1;
 }
-len = sizeof(buf); 
+len = sizeof(buf);
+// check the socket tcp implementation 
 if (getsockopt(sock, IPPROTO_TCP, TCP_CONGESTION, buf, &len) != 0) {
 perror("getsockopt"); 
 return -1; 
-} 
+}
+// prints the socket tcp implementation 
 printf("New: %s\n", buf);
 for(int i=0;i<5;i++){
-    FILE * fp;
-    fp = fopen(filename, "r");
-  if (fp == NULL) {
-    perror("[-]Error in reading file.");
-    exit(1);
-  }
-    send_file(fp, sock);
-    fclose(fp);
-  printf("[+]File data sent successfully.\n");
+        send_file(fp, sock);
+	//resets the pointer to the start of the file
+    fseek(fp,0,SEEK_SET);
+  printf("File number %d was sent successfully in reno",%i);
 }
-printf("closing connection");
+// self explainatory
+printf("closing connection and file");
+fclose(fp);
 close(sock); 
 return 0; 
 }
