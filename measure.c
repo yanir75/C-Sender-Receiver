@@ -16,7 +16,7 @@ void write_file(int sockfd){
   int count=0;
   while (1) {
 	  char * buffer = (char *) malloc(FILESIZE);
-    err = recv(sockfd, buffer, SIZE, 0);
+    err = recv(sockfd, buffer, FILESIZE, 0);
     if (err <= 0){
       break;
       return;
