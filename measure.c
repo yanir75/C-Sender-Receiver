@@ -8,35 +8,38 @@
 #include <arpa/inet.h>
 #include <time.h>
 #define FILESIZE 5000000
+#define SIZE 1024
 void write_file(int sockfd){
   int err;
   int num=0;
 	  clock_t t;
   t = clock();
   int count=0;
-  while (1) {
-	  char * buffer = (char *) malloc(FILESIZE);
-    err = recv(sockfd, buffer, FILESIZE, 0);
+  int size = FILESIZE*10;
+  while (size>0) {
+	  char * buffer = (char *) malloc(SIZE);
+    err = recv(sockfd, buffer, SIZE, 0);
     if (err <= 0){
       break;
       return;
-      printf("the numbers of bytes is:%d",num);
+      //printf("the numbers of bytes is:%d",num);
     }
+    size-=strlen(buffer);
     num= num+strlen(buffer);
-	if(num>=size){
-		printf("the numbers of bytes is:%d \n",size);
+	if(num>=FILESIZE){
+		printf("the numbers of bytes is:%d \n",FILESIZE);
 		count++;
-		num=num-size;
+		num=num-FILESIZE;
 		  t = clock() - t;
 	double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds
     printf("The time it took to transfer the file is: %f \n", time_taken);
 	t = clock();
 	if(count==5){
-		printf("Switching to reno");
+		printf("Switching to reno\n");
+	}
 	}
     free(buffer);
   }
-  printf("the numbers of bytes is:%d \n",num);
   return;
 }
 
@@ -77,6 +80,7 @@ int main(){
   new_sock = accept(sockfd, (struct sockaddr*)&new_addr, &addr_size);
   write_file(new_sock);
   printf("The file was received successfully");
-
+	close(new_sock);
+	close(sockfd);
   return 0;
 }
