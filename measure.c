@@ -12,34 +12,35 @@
 void write_file(int sockfd){
   int err;
   int num=0;
-	  clock_t t;
-  t = clock();
+  time_t start,end;
   int count=0;
   int size = FILESIZE*10;
+  time(&start);
+  char buffer[SIZE];
   while (size>0) {
-	  char * buffer = (char *) malloc(SIZE);
-    err = recv(sockfd, buffer, SIZE, 0);
+    err = recv(sockfd, buffer, 1024, 0);
     if (err <= 0){
       break;
       return;
-      //printf("the numbers of bytes is:%d",num);
+      //printf("the numbers of bytes is:%d err",num);
     }
-    size-=strlen(buffer);
-    num= num+strlen(buffer);
+    size= size - err;
+    num= num+ err;
 	if(num>=FILESIZE){
 		printf("the numbers of bytes is:%d \n",FILESIZE);
 		count++;
 		num=num-FILESIZE;
-		  t = clock() - t;
-	double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds
+	time(&end);
+	double time_taken=end-start;	
     printf("The time it took to transfer the file is: %f \n", time_taken);
-	t = clock();
 	if(count==5){
 		printf("Switching to reno\n");
 	}
+	time(&start);
 	}
-    free(buffer);
+	bzero(buffer,SIZE);
   }
+  printf("%d",count);
   return;
 }
 
@@ -79,8 +80,8 @@ int main(){
   addr_size = sizeof(new_addr);
   new_sock = accept(sockfd, (struct sockaddr*)&new_addr, &addr_size);
   write_file(new_sock);
-  printf("The file was received successfully");
-	close(new_sock);
-	close(sockfd);
+  printf("The file was received successfully\n");
+  close(new_sock);
+  close(sockfd);
   return 0;
 }
