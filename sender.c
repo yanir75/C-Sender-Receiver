@@ -15,7 +15,7 @@ void send_file(FILE *fp, int sockfd){
   char * data = (char *) malloc(SIZE);
   while(fgets(data, SIZE, fp) != NULL) {
     if (send(sockfd, data,strlen(data), 0) == -1) {
-      perror("Could not send the file");
+      printf("Could not send the file, %d was sent",sentSize);
       exit(1);
     }
 	// calculates the size 
@@ -104,10 +104,12 @@ return -1;
 // prints the socket tcp implementation 
 printf("New: %s\n", buf);
 for(int i=1;i<=5;i++){
-        fseek(fp,0,SEEK_SET);
-	send_file(fp, sock);
+    send_file(fp, sock);
+        //resets the pointer to the start of the file
+    fseek(fp,0,SEEK_SET);
   printf("File number %d was sent successfully in reno\n",i);
 }
+
 // self explainatory
 printf("closing connection and file\n");
 fclose(fp);
