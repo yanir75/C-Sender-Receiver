@@ -9,28 +9,30 @@
 #include <sys/time.h>
 #define FILESIZE 5000000
 #define SIZE 1024
-
+// calculate time difference between two timeval in ms
 float timedifference_msec(struct timeval t0, struct timeval t1)
 {
     return (t1.tv_sec - t0.tv_sec) * 1000.0f + (t1.tv_usec - t0.tv_usec) / 1000.0f;
 }
-
-void receive_file(int sockfd){
+// receives a file
+void receive_file(int sock){
   int err;
   int num=0;
   struct timeval start,end;
   int count=0;
-  int size = FILESIZE*10;
   gettimeofday(&start,0);
   char buffer[SIZE];
   float avg = 0;
+	// receives the file until it can't receive.
   while (1) {
-    err = recv(sockfd, buffer, 1024, 0);
+	  // err is the number of bytes it received , recv is for receiving from the sender
+    err = recv(sock, buffer, 1024, 0);
     if (err <= 0){
       return;
       //printf("the numbers of bytes is:%d err",num);
     }
     num= num+ err;
+	  // calculating time and size
 	if(num>=FILESIZE){
 		printf("the numbers of bytes is:%d \n",FILESIZE);
 		count++;
@@ -53,32 +55,33 @@ void receive_file(int sockfd){
 }
 
 int main(){
+	// the IP 
   char *ip = "127.0.0.1";
+	// the port
   int port = 10000;
-
-  int sockfd, new_sock;
+// my listening socket and the sender socket.
+  int sock, new_sock;
   struct sockaddr_in server_addr, new_addr;
   socklen_t addr_size;
 
-  sockfd = socket(AF_INET, SOCK_STREAM, 0);
-  if(sockfd < 0) {
+  sock = socket(AF_INET, SOCK_STREAM, 0);
+  if(sock < 0) {
     perror("could not create socket");
     exit(1);
   }
   printf("socket was created\n");
-
   server_addr.sin_family = AF_INET;
   server_addr.sin_port = htons(port);
   server_addr.sin_addr.s_addr = inet_addr(ip);
 
-  int err = bind(sockfd, (struct sockaddr*)&server_addr, sizeof(server_addr));
+  int err = bind(sock, (struct sockaddr*)&server_addr, sizeof(server_addr));
   if(err < 0) {
     perror("could not bind socket");
     exit(1);
   }
   printf("socket was bound\n");
 
-  if(listen(sockfd, 10) == 0){
+  if(listen(sock, 10) == 0){
 		printf("listening\n");
 	}else{
 		perror("could not listen");
@@ -86,13 +89,13 @@ int main(){
 	}
 
   addr_size = sizeof(new_addr);
-  new_sock = accept(sockfd, (struct sockaddr*)&new_addr, &addr_size);
+  new_sock = accept(sock, (struct sockaddr*)&new_addr, &addr_size);
   if(new_sock ==-1){
 	  printf("could not accept socket");
   }
   receive_file(new_sock);
   printf("The file was received successfully\n");
   close(new_sock);
-  close(sockfd);
+  close(sock);
   return 0;
 }
