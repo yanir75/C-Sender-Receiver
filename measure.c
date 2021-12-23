@@ -61,40 +61,48 @@ int main(){
   int port = 10000;
 // my listening socket and the sender socket.
   int sock, new_sock;
+	// sockaddress metadata
   struct sockaddr_in server_addr, new_addr;
+	// resets the sock address of the sender and server.
+	memset(&server_addr,0,sizeof(server_addr));
+	memset(&new_addr,0,sizeof(new_addr));
   socklen_t addr_size;
-
+// creates a tcp socket
   sock = socket(AF_INET, SOCK_STREAM, 0);
   if(sock < 0) {
     perror("could not create socket");
     exit(1);
   }
   printf("socket was created\n");
+	// enters the AF_inet kind , port and server address
   server_addr.sin_family = AF_INET;
   server_addr.sin_port = htons(port);
   server_addr.sin_addr.s_addr = inet_addr(ip);
-
+// it binds the socket to the server address
   int err = bind(sock, (struct sockaddr*)&server_addr, sizeof(server_addr));
   if(err < 0) {
     perror("could not bind socket");
     exit(1);
   }
   printf("socket was bound\n");
-
+// listens to 10 connections at once
   if(listen(sock, 10) == 0){
 		printf("listening\n");
 	}else{
 		perror("could not listen");
     exit(1);
 	}
-
+// size of server address
   addr_size = sizeof(new_addr);
+	//accepts connection
   new_sock = accept(sock, (struct sockaddr*)&new_addr, &addr_size);
   if(new_sock ==-1){
 	  printf("could not accept socket");
   }
+	//receives the file
   receive_file(new_sock);
-  printf("The file was received successfully\n");
+  printf("The files were received successfully closing the sockets\n");
+	// closing connection and socket listener
   close(new_sock);
   close(sock);
   return 0;
