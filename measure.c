@@ -48,6 +48,7 @@ void receive_file(int sock){
 	}
 	gettimeofday(&start,0);
 	}
+	  // resets the array to 0
 	bzero(buffer,SIZE);
   }
   printf("avg response time is: %f\n",avg/5);
