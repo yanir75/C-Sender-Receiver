@@ -6,41 +6,49 @@
 #include <unistd.h> 
 #include <stdlib.h>
 #include <arpa/inet.h>
-#include <time.h>
+#include <sys/time.h>
 #define FILESIZE 5000000
 #define SIZE 1024
-void write_file(int sockfd){
+
+float timedifference_msec(struct timeval t0, struct timeval t1)
+{
+    return (t1.tv_sec - t0.tv_sec) * 1000.0f + (t1.tv_usec - t0.tv_usec) / 1000.0f;
+}
+
+void receive_file(int sockfd){
   int err;
   int num=0;
-  time_t start,end;
+  struct timeval start,end;
   int count=0;
   int size = FILESIZE*10;
-  time(&start);
+  gettimeofday(&start,0);
   char buffer[SIZE];
-  while (size>0) {
+  float avg = 0;
+  while (1) {
     err = recv(sockfd, buffer, 1024, 0);
     if (err <= 0){
-      break;
       return;
       //printf("the numbers of bytes is:%d err",num);
     }
-    size= size - err;
     num= num+ err;
 	if(num>=FILESIZE){
 		printf("the numbers of bytes is:%d \n",FILESIZE);
 		count++;
 		num=num-FILESIZE;
-	time(&end);
-	double time_taken=end-start;	
-    printf("The time it took to transfer the file is: %f \n", time_taken);
+	gettimeofday(&end, 0);
+	float time_per_file=timedifference_msec(start,end);	
+	avg+=time_per_file*0.001;
+    printf("The time it took to transfer the file is: %f seconds \n", time_per_file*0.001);
 	if(count==5){
-		printf("Switching to reno\n");
+		printf("avg response time is: %f\n",avg/5);
+		avg=0;
+		printf("sender is switching to reno\n");
 	}
-	time(&start);
+	gettimeofday(&start,0);
 	}
 	bzero(buffer,SIZE);
   }
-  printf("%d",count);
+  printf("avg response time is: %f\n",avg/5);
   return;
 }
 
@@ -54,32 +62,35 @@ int main(){
 
   sockfd = socket(AF_INET, SOCK_STREAM, 0);
   if(sockfd < 0) {
-    perror("[-]Error in socket");
+    perror("could not create socket");
     exit(1);
   }
-  printf("[+]Server socket created successfully.\n");
+  printf("socket was created\n");
 
   server_addr.sin_family = AF_INET;
-  server_addr.sin_port = port;
+  server_addr.sin_port = htons(port);
   server_addr.sin_addr.s_addr = inet_addr(ip);
 
   int err = bind(sockfd, (struct sockaddr*)&server_addr, sizeof(server_addr));
   if(err < 0) {
-    perror("[-]Error in bind");
+    perror("could not bind socket");
     exit(1);
   }
-  printf("[+]Binding successfull.\n");
+  printf("socket was bound\n");
 
   if(listen(sockfd, 10) == 0){
-		printf("[+]Listening....\n");
+		printf("listening\n");
 	}else{
-		perror("[-]Error in listening");
+		perror("could not listen");
     exit(1);
 	}
 
   addr_size = sizeof(new_addr);
   new_sock = accept(sockfd, (struct sockaddr*)&new_addr, &addr_size);
-  write_file(new_sock);
+  if(new_sock ==-1){
+	  printf("could not accept socket");
+  }
+  receive_file(new_sock);
   printf("The file was received successfully\n");
   close(new_sock);
   close(sockfd);
