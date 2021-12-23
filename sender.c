@@ -56,6 +56,8 @@ printf("Current: %s\n", buf);
   int port = 10000;
   // sockaddr of the server information.
   struct sockaddr_in serv;
+	//resets the memory
+	memset(&serv,0,sizeof(serv));
   // AF_INET is ipv4 protocol
   serv.sin_family = AF_INET;
   // port equals the port we will use
