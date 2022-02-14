@@ -2,6 +2,7 @@
 
 This project has come to show the diffrences between TCP reno and cubic.
 I wrote a script that sends a file through TCP socket (cubic) 5 times then changes the implementation socket to reno and sends the file 5 times again.
+On top of that we will test those scripts on multiple percentage of packet loss.
 
 This will be devided in to two parts, measure and sender.
 Measure will create a socket listening to a decided port and will wait for the connection.
