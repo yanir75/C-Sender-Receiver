@@ -11,7 +11,7 @@ In addition it will print the avg time it took for cubic and reno.
 Sender will connect to the socket and send the file 5 times then it will change the tcp implementation to reno and send it 5 times again.
 
 Comparison results
-![alt text](
+![alt text](https://github.com/yanir75/automatic-octo-winner/blob/main/Graph%20result%20%20congestion%20control%20between%20reno%20to%20cubic%20Task4.png)
 
 ---------
 # How to use
