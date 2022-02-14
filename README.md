@@ -19,7 +19,7 @@ Comparison results
 
 First lets clone the repository.
 ```
-git clone
+git clone https://github.com/yanir75/C-Sender-Receiver.git
 ```
 compile the files
 ```
